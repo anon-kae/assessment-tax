@@ -3,7 +3,8 @@ package main
 import (
 	"net/http"
 
-	"github.com/anon-kae/assessment-tax/config"
+	"github.com/anon-kae/assessment-tax/postgres"
+	"github.com/anon-kae/assessment-tax/controllers"
 	"github.com/anon-kae/assessment-tax/helper"
 	"github.com/anon-kae/assessment-tax/middleware"
 	"github.com/labstack/echo/v4"
@@ -14,7 +15,7 @@ import (
 )
 
 func main() {
-	p, err := config.New(config.Options{DatabaseURL: os.Getenv("DATABASE_URL")})
+	db, err := postgres.New(postgres.Configs{DatabaseURL: os.Getenv("DATABASE_URL")})
 
 	if err != nil {
 		panic(err)
@@ -30,5 +31,9 @@ func main() {
 	// e.GET("/", middleware.AuthMiddleware(func(c echo.Context) error {
 	// 	return c.String(http.StatusOK, "Hello, Go Bootcamp!")
 	// }))
+
+	taxController := controllers.New(db)
+	taxController.RegisterRoutes(e)
+
 	e.Logger.Fatal(e.Start(os.Getenv("PORT")))
 }
