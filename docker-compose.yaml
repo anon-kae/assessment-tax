@@ -3,7 +3,9 @@ services:
     image: postgres:16
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: QiJjhi4QBHMf4hq4VlTvxNn1RprJC3vs5MdToI5kdnprSnopTP
       POSTGRES_DB: ktaxes
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - '5432:5432'
