@@ -5,6 +5,7 @@ import (
 	"math"
 
 	"github.com/anon-kae/assessment-tax/helper"
+	// "github.com/anon-kae/assessment-tax/middleware"
 	"github.com/anon-kae/assessment-tax/models"
 	"github.com/labstack/echo/v4"
 )
@@ -63,6 +64,8 @@ func (tc *TaxController) TaxCalculate(c echo.Context) error {
 	for _, allowance := range income.Allowances {
 		if allowance.AllowanceType == AllowanceTypeDonation {
 			donation += math.Min(allowance.Amount, 100000.0)
+		} else if allowance.AllowanceType == AllowanceTypeKReceipt {
+			donation += math.Min(allowance.Amount, 15000.0)
 		}
 	}
 
@@ -95,4 +98,6 @@ func calculateTax(income float64, taxRules []models.TaxationRule) float64 {
 
 func (tc *TaxController) RegisterRoutes(e *echo.Echo) {
 	e.POST("/tax/calculations", tc.TaxCalculate)
+	// Not Implemented
+	// e.POST("/admin/deductions/personal", middleware.AuthMiddleware())
 }
