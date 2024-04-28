@@ -3,7 +3,7 @@ package controllers
 import (
 	"fmt"
 
-	_ "github.com/anon-kae/assessment-tax/errortype"
+	"github.com/anon-kae/assessment-tax/errortype"
 	"github.com/anon-kae/assessment-tax/helper"
 	"github.com/anon-kae/assessment-tax/models"
 	"github.com/labstack/echo/v4"
@@ -20,6 +20,11 @@ type TaxController struct {
 func New(db Store) *TaxController {
 	return &TaxController{store: db}
 }
+
+const (
+	AllowanceTypeDonation string = "donation"
+	AllowanceTypeKReceipt string = "k-receipt"
+)
 
 type TaxResponse struct {
 	Tax float64 `json:"tax"`
@@ -49,14 +54,36 @@ func (tc *TaxController) TaxCalculate(c echo.Context) error {
 	}
 
 	taxRules, err := tc.store.FindAllTaxRules()
-
 	if err != nil {
 		return err
 	}
-	taxableIncome := income.TotalIncome - 60000.0
-	tax := calculateTax(taxableIncome, taxRules)
+
+	taxableIncome, err := tc.calculateTaxableIncome(income)
+	if err != nil {
+		return err
+	}
+
+	tax := calculateTax(taxableIncome, taxRules) - income.Wht
+	
 
 	return helper.SuccessHandler(c, TaxResponse{Tax: tax})
+}
+
+func (c *TaxController) calculateTaxableIncome(payload TaxPayload) (float64, error) {
+	taxableIncome := payload.TotalIncome - 60000.0
+
+	for _, allowance := range payload.Allowances {
+		switch allowance.AllowanceType {
+		case AllowanceTypeDonation:
+			taxableIncome -= allowance.Amount
+		case AllowanceTypeKReceipt:
+			// TODO: Implement K-Receipt logic
+		default:
+			return 0, errortype.ValidationError{Message: "Invalid type"}
+		}
+	}
+
+	return taxableIncome, nil
 }
 
 func calculateTax(income float64, taxRules []models.TaxationRule) float64 {
@@ -80,5 +107,5 @@ func calculateTax(income float64, taxRules []models.TaxationRule) float64 {
 }
 
 func (tc *TaxController) RegisterRoutes(e *echo.Echo) {
-	e.GET("/tax/calculations", tc.TaxCalculate)
+	e.POST("/tax/calculations", tc.TaxCalculate)
 }
