@@ -1,4 +1,4 @@
-package config
+package postgres
 
 import (
 	"database/sql"
@@ -11,11 +11,11 @@ type Postgres struct {
 	Db *sql.DB
 }
 
-type Options struct {
+type Configs struct {
 	DatabaseURL string
 }
 
-func New(cfg Options) (*Postgres, error) {
+func New(cfg Configs) (*Postgres, error) {
 	db, err := sql.Open("postgres", cfg.DatabaseURL)
 	
 	if err != nil {
